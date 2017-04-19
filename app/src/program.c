@@ -5,6 +5,139 @@
 #define CATODO_COMUN 1
 //#define ANODO_COMUN 1
 
+typedef enum{ EN_ESPERA, SUBIENDO, BAJANDO, ABRIENDO_PUERTA, PUERTA_ABIERTA, CERRANDO_PUERTA, PUERTA_CERRADA, MODO_CONFIGURACION, LEER_PISO,ALARMA_P_ABIERTA } estado_ascensor;
+
+estado_ascensor estadoActual;
+
+// variables para la MEF del ascensor
+uint8_t tiempoTranscurrido = 0;
+uint8_t ascensorsubiendo = 0;
+uint8_t pisoactual=0;
+uint8_t pisoseteado=0;
+
+//// MEF del asensor
+
+void puertaAbierta( void ) {
+   gpioWrite( LEDG, ON );
+   gpioWrite( LED1, OFF );
+   gpioWrite( LED2, OFF );
+}
+
+void ascensorMoviendose( void ) {
+   gpioWrite( LEDG, ON );
+   gpioWrite( LED1, OFF );
+   gpioWrite( LED2, OFF );
+}
+void puertaAbriendose( void ) {
+   gpioWrite( LEDG, OFF );
+   gpioWrite( LED1, ON );
+   gpioWrite( LED2, OFF );
+}
+
+void puertaCerrandose( void ) {
+   gpioWrite( LEDG, OFF );
+   gpioWrite( LED1, OFF );
+   gpioWrite( LED2, ON );
+}
+
+void enEspera( void ) {
+   gpioWrite( LED1, OFF );
+   gpioWrite( LED3, ON );
+   gpioWrite( LED2, OFF );
+}
+
+void InicializarMEF( void ) {
+   estadoActual =EN_ESPERA;
+}
+void ActualizarMEF( void ) {
+   switch(estadoActual){
+      case EN_ESPERA:
+      //uartWriteString(UART_USB, texto);
+       if (!gpioRead(TEC2)){
+         ascensorsubiendo=1;
+         estadoActual = ABRIENDO_PUERTA;
+       }
+       if (!gpioRead(TEC3)){
+         estadoActual = ABRIENDO_PUERTA;
+         ascensorsubiendo=0;
+       }
+         
+      break;
+      case SUBIENDO:
+       //uartWriteString(UART_USB, texto5);
+       ascensorMoviendose();
+       if( tiempoTranscurrido == 2 ){
+          if (pisoactual==pisoseteado){
+             estadoActual = ABRIENDO_PUERTA;
+          }      
+            tiempoTranscurrido = 0;
+       }
+      break;
+      case BAJANDO:
+       //uartWriteString(UART_USB, texto6);
+       ascensorMoviendose();
+       if (pisoactual==pisoseteado){
+          estadoActual = ABRIENDO_PUERTA;
+        }
+         
+      break;
+      case ABRIENDO_PUERTA:
+       //uartWriteString(UART_USB, texto1);
+        puertaAbriendose();
+        tiempoTranscurrido++;
+        if( tiempoTranscurrido == 2 ){
+            estadoActual = PUERTA_ABIERTA;
+            tiempoTranscurrido = 0;}
+      break;
+      case PUERTA_ABIERTA:
+       //uartWriteString(UART_USB, texto2);
+        tiempoTranscurrido++;
+        if( tiempoTranscurrido == 2 ){
+            estadoActual = CERRANDO_PUERTA;
+            tiempoTranscurrido = 0;
+        }    
+      break;
+      case CERRANDO_PUERTA:
+       //uartWriteString(UART_USB, texto3);
+        puertaCerrandose();
+        tiempoTranscurrido++;
+        if( tiempoTranscurrido == 2 ){
+           while (!gpioRead(TEC1)){}
+           estadoActual = PUERTA_CERRADA;
+           tiempoTranscurrido = 0;
+        }
+      break;
+      case PUERTA_CERRADA:
+       //uartWriteString(UART_USB, texto4);
+       if(ascensorsubiendo){
+       estadoActual = SUBIENDO;
+       }
+       else{ estadoActual = BAJANDO; }
+      break;
+      case MODO_CONFIGURACION:
+         
+      break;
+      case LEER_PISO:
+       //pisoseteado = lectura del teclado matricial   
+       if(pisoactual<pisoseteado){
+       estadoActual = SUBIENDO;
+       }
+       else {estadoActual = BAJANDO;}
+      break;
+      case ALARMA_P_ABIERTA:
+         
+      break;
+      default:
+         InicializarMEF();
+      break;
+   } 
+}
+
+
+
+
+/////////////////////////////////////////////////
+
 // Configuraci?n de pines del display
 uint8_t display7SegmentPins_[8] = {
    GPIO5, // a
@@ -195,7 +328,7 @@ bool_t leerTecladoMatricial( void ){
    
 
 int main(void){
-
+   
    boardConfig();
    gpioConfig(GPIO6, GPIO_OUTPUT);   // catodo comun del primer digito
    gpioConfig(LCD1, GPIO_OUTPUT);    // " del segundo digito
@@ -203,7 +336,7 @@ int main(void){
    gpioConfig(LCD3, GPIO_OUTPUT);   // " del cuarto digito
    display7SegmentPinConfig_();    
    configurarTecladoMatricial(); // Configurar teclado matricial
-   
+   InicializarMEF();
    uint8_t k = 0;  //indice primer display 
    uint8_t i = 0;  //indice segundo display
    uint8_t m = 0;  //indice tercer display 
@@ -254,7 +387,8 @@ int main(void){
          
       }
 
-
+    ActualizarMEF();
+    delay(500);
 
    }
    return 0 ;
