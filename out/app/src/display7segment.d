@@ -1,4 +1,4 @@
-out/app/src/program.o: app/src/program.c app/inc/program.h \
+out/app/src/display7segment.o: app/src/display7segment.c \
  libs/sapi/inc/sapi.h libs/sapi/inc/sapi_datatypes.h \
  libs/lpc_chip_43xx/inc/chip.h libs/lpc_chip_43xx/inc/sys_config.h \
  libs/lpc_chip_43xx/inc/cmsis.h libs/lpc_chip_43xx/inc/lpc_types.h \
@@ -66,5 +66,4 @@ out/app/src/program.o: app/src/program.c app/inc/program.h \
  libs/sapi/inc/sapi_rtc.h libs/sapi/inc/sapi_sleep.h \
  libs/sapi/inc/sapi_7_segment_display.h libs/sapi/inc/sapi_keypad.h \
  libs/sapi/inc/sapi_pwm.h libs/sapi/inc/sapi_servo.h \
- libs/sapi/inc/sapi_hmc5883l.h app/inc/display7segment.h \
- app/inc/keypad4x4.h
+ libs/sapi/inc/sapi_hmc5883l.h
