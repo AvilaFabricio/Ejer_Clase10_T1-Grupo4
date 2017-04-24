@@ -2,6 +2,7 @@
 #include "sapi.h"      // <= sAPI library
 #include "display7segment.h"
 #include "keypad4x4.h"
+#include "MEFascensor.h"
 #include <math.h>         /* <= Funciones matematicas */
 
 delay_t digitChange;
